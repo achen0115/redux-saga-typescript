@@ -6,9 +6,11 @@ import {
   Store,
 } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension/logOnlyInProduction";
-import logger from "redux-logger";
+import createSagaMiddleware from "redux-saga";
 
-function counterReducer(state = 0, action: Action) {
+import mySaga from "./sagas";
+
+function postsReducer(state = 0, action: Action) {
   switch (action.type) {
     case "INCREMENT":
       return state + 1;
@@ -20,7 +22,7 @@ function counterReducer(state = 0, action: Action) {
 }
 
 const rootReducer = combineReducers({
-  counter: counterReducer,
+  posts: postsReducer,
 });
 
 export type AppState = ReturnType<typeof rootReducer>;
@@ -30,8 +32,10 @@ const composeEnhancers = composeWithDevTools({
 });
 
 export default function configureStore(initialState?: AppState): Store {
-  const middleware = [logger];
+  const sagaMiddleware = createSagaMiddleware();
+  const middleware = [sagaMiddleware];
   const enhancer = composeEnhancers(applyMiddleware(...middleware));
   const store = createStore(rootReducer, initialState, enhancer);
+  sagaMiddleware.run(mySaga);
   return store;
 }
